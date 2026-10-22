@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Research Orchestrator — Overlay Science Fleet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap');
+  body{font-family:Inter,sans-serif}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .card{background:rgba(39,39,42,.6);border:1px solid rgb(63 63 70/.6);backdrop-filter:blur(8px)}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:999px}
+</style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+<!-- header -->
+<header class="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur border-b border-zinc-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold">◈</div>
+      <div>
+        <div class="text-sm font-bold tracking-tight">Research Orchestrator</div>
+        <div class="text-xs text-zinc-400">Single commander — all Overlay Science systems</div>
+      </div>
+      <span id="health" class="ml-4 mono text-xs px-2 py-1 rounded bg-zinc-900 border border-zinc-800">loading…</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/api/health" class="mono text-xs text-zinc-500 hover:text-zinc-300">/api/health ↗</a>
+      <span class="text-zinc-700">·</span>
+      <span class="mono text-xs text-zinc-500" id="clock"></span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+  <!-- fleet strip -->
+  <section class="card rounded-xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-xs font-bold tracking-widest text-zinc-400">FLEET — <span id="fleetCount">—</span> SYSTEMS</h2>
+      <button onclick="loadSystems()" class="mono text-xs text-zinc-400 hover:text-zinc-100 border border-zinc-800 rounded px-2 py-1">refresh</button>
+    </div>
+    <div id="fleet" class="flex flex-wrap gap-2"></div>
+    <div class="mono text-xs text-zinc-500 mt-2">Solid = HTTP, dashed = CLI-only. OSS sidecars (Stirling-PDF, open-notebook, Scrapling) are fail-soft Docker — <code>docker compose -f docker-compose.orchestrator.yml up -d</code> to enable.</div>
+  </section>
+
+  <div class="grid lg:grid-cols-5 gap-6">
+    <!-- left: launch + ingestion -->
+    <div class="lg:col-span-3 space-y-6">
+      <section class="card rounded-xl p-5 space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h3 class="text-sm font-bold">Research directive</h3>
+          <span class="mono text-xs text-zinc-500">commander sets direction → fleet contributes → one spec out</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">OBJECTIVE — what must this research establish?</span>
+            <textarea id="objective" rows="2" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">Establish whether mevalonate-pathway co-targeting with statins can reverse resistance to pan-KRAS G12D inhibition, and define the experimental plan to test it.</textarea>
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">STANDING HYPOTHESIS (optional — leave empty to let synthesis formulate one)</span>
+            <input id="hypothesis" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" placeholder="e.g. Statin-induced prenylation depletion synergizes with daraxonrasib in KRAS G12D tumors"/>
+          </label>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">DIRECTION</span>
+            <select id="direction" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+              <option value="exploratory">exploratory — map the landscape</option>
+              <option value="confirmatory">confirmatory — test hypothesis vs evidence</option>
+              <option value="therapeutic-design">therapeutic-design — converge on strategy</option>
+              <option value="mechanism-mapping">mechanism-mapping — resolve biology</option>
+              <option value="evidence-review">evidence-review — systematic review</option>
+            </select>
+          </label>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">LITERATURE QUERY (feeds ingestion)</span>
+            <input id="query" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" value="KRAS G12D statin mevalonate resistance"/>
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">RESEARCH QUESTIONS (one per line — synthesis maps each to the system that answers it)</span>
+            <textarea id="questions" rows="3" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">What published evidence links statins to KRAS pathway efficacy?
+Which resistance mechanisms are documented for KRAS G12D inhibitors?
+What mechanistic models exist for prenylation-competition dynamics?</textarea>
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">CONTEXT / CONSTRAINTS (optional)</span>
+            <input id="contextNotes" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" placeholder="e.g. Focus on 2024+ evidence; CPU-only local models; research-only, no clinical claims"/>
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">TITLE</span>
+            <input id="title" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" value="Mevalonate co-targeting vs KRAS G12D resistance"/>
+          </label>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">DOMAIN</span>
+            <select id="domain" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+              <option value="all">all — every system</option>
+              <option value="oncology" selected>oncology</option>
+              <option value="biocompute">biocompute</option>
+              <option value="chemlab">chemlab</option>
+              <option value="genomics">genomics</option>
+              <option value="quantum">quantum</option>
+            </select>
+          </label>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">PRIORITY</span>
+            <select id="priority" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+              <option>normal</option><option>high</option><option>low</option>
+            </select>
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">SYSTEMS (optional — empty = auto-route by domain)</span>
+            <input id="systems" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm mono" placeholder="e.g. overlay-oncology,decon"/>
+          </label>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="launchStudy()" id="launchBtn" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm rounded-lg px-4 py-2.5">⌘ Command the fleet</button>
+          <button onclick="launchAll()" class="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-sm rounded-lg px-4 py-2.5">Command ALL systems</button>
+        </div>
+        <div id="launchOut" class="mono text-xs text-zinc-400 whitespace-pre-wrap hidden"></div>
+      </section>
+
+      <section class="card rounded-xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">Ingestion controls</h3>
+          <span class="mono text-xs text-zinc-500">applied on dispatch — dedup, caps, source routing</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <div class="mono text-xs text-zinc-400">SOURCES</div>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="europepmc" checked class="accent-emerald-500"> Europe PMC</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="curemind" checked class="accent-emerald-500"> CureMind / BAM</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="gdc"> GDC</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="pubtator"> PubTator</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="cbioportal"> cBioPortal</label>
+            <div class="mono text-xs text-zinc-600 pt-1 border-t border-zinc-800">OSS sidecars (Docker, fail-soft):</div>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="stirling-pdf"> Stirling-PDF <span class="mono text-xs text-zinc-600">PDF OCR/extract</span></label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="open-notebook"> open-notebook <span class="mono text-xs text-zinc-600">NotebookLM synthesis</span></label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-src="scrapling"> Scrapling <span class="mono text-xs text-zinc-600">stealth scrape fallback</span></label>
+          </div>
+          <div class="space-y-3">
+            <label class="space-y-1 block">
+              <span class="mono text-xs text-zinc-400">PAGE SIZE (per-source)</span>
+              <input id="pageSize" type="range" min="5" max="100" value="10" class="w-full accent-emerald-500"><span class="mono text-xs text-zinc-500"><span id="pageSizeV">10</span> papers / call</span>
+            </label>
+            <label class="space-y-1 block">
+              <span class="mono text-xs text-zinc-400">MAX PAPERS (cap after dedup)</span>
+              <input id="maxPapers" type="range" min="10" max="200" value="50" class="w-full accent-emerald-500"><span class="mono text-xs text-zinc-500"><span id="maxPapersV">50</span> cap</span>
+            </label>
+            <label class="flex items-center gap-2 text-sm"><input id="dedup" type="checkbox" checked class="accent-emerald-500"> Deduplicate by DOI/ID</label>
+            <label class="flex items-center gap-2 text-sm"><input id="preprints" type="checkbox" checked class="accent-emerald-500"> Include preprints</label>
+          </div>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">DATE FROM</span>
+            <input id="dateFrom" type="date" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+          </label>
+          <label class="space-y-1">
+            <span class="mono text-xs text-zinc-400">DATE TO</span>
+            <input id="dateTo" type="date" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+          </label>
+          <label class="space-y-1 col-span-2">
+            <span class="mono text-xs text-zinc-400">EVIDENCE FILTER</span>
+            <select id="evidenceFilter" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+              <option value="">any — no filter</option>
+              <option value="clinical-trial">clinical-trial</option>
+              <option value="preclinical">preclinical</option>
+              <option value="review">review</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">Crons — experiment schedules</h3>
+          <span class="mono text-xs text-zinc-500">cron UTC</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <input id="cron" class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm mono" value="0 2 * * *" placeholder="0 2 * * *">
+          <input id="schedTitle" class="col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" placeholder="Schedule title — e.g. Daily 2am comprehensive sweep">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="schedQuery" class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm" placeholder="Query for the cron">
+          <select id="schedDomain" class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm">
+            <option value="all">all</option><option value="oncology">oncology</option><option value="chemlab">chemlab</option>
+          </select>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="addSchedule()" class="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-sm rounded-lg px-4 py-2">+ Add cron</button>
+          <button onclick="loadSchedules()" class="mono text-xs text-zinc-500 hover:text-zinc-300 px-2">refresh</button>
+        </div>
+        <div id="schedules" class="space-y-2"></div>
+      </section>
+    </div>
+
+    <!-- right: reports + studies -->
+    <div class="lg:col-span-2 space-y-6">
+      <section class="card rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">Research specification</h3>
+          <span class="mono text-xs text-zinc-500" id="synthBadge">the ONE document</span>
+        </div>
+        <div id="latest" class="mono text-xs text-zinc-400 whitespace-pre-wrap bg-zinc-900/50 border border-zinc-800 rounded-lg p-3 min-h-[240px] max-h-[520px] overflow-auto">no spec yet — issue a directive</div>
+        <div class="flex gap-2">
+          <button onclick="openLatest('md')" class="mono text-xs bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5">open spec</button>
+          <button onclick="openLatest('dispatch')" class="mono text-xs bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5">dispatch log</button>
+          <button onclick="openLatest('json')" class="mono text-xs bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5">json</button>
+        </div>
+      </section>
+
+      <section class="card rounded-xl p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">Reports</h3>
+          <span class="mono text-xs text-zinc-500">newest first — up to 50</span>
+        </div>
+        <div id="reports" class="space-y-2 max-h-[420px] overflow-auto pr-1"></div>
+      </section>
+
+      <section class="card rounded-xl p-5 space-y-2">
+        <h3 class="text-sm font-bold">How it works</h3>
+        <ol class="mono text-xs text-zinc-400 list-decimal list-inside space-y-1">
+          <li>Tune <b class="text-zinc-300">Ingestion controls</b> (sources, page size, dedup, date window).</li>
+          <li><b class="text-zinc-300">Launch a study</b> — one commander fans it to every matching system (4-at-a-time, fail-soft).</li>
+          <li>Report lands in <b class="text-zinc-300">data/reports/</b> as <code>.json</code> + <code>.md</code>.</li>
+          <li>Add a <b class="text-zinc-300">cron</b> for recurring work (e.g. <code>0 * * * *</code> hourly).</li>
+          <li>Bring offline systems online — next report widens automatically.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+function ingestion() {
+  const sources = [...document.querySelectorAll('[data-src]:checked')].map(e=>e.dataset.src);
+  return {
+    sources: sources.length ? sources : ['europepmc'],
+    pageSize: +$('#pageSize').value,
+    dateFrom: $('#dateFrom').value || null,
+    dateTo: $('#dateTo').value || null,
+    dedup: $('#dedup').checked,
+    maxPapers: +$('#maxPapers').value,
+    includePreprints: $('#preprints').checked,
+    evidenceFilter: $('#evidenceFilter').value || null,
+    confidenceThreshold: 0
+  };
+}
+$('#pageSize').addEventListener('input', e=> $('#pageSizeV').textContent = e.target.value);
+$('#maxPapers').addEventListener('input', e=> $('#maxPapersV').textContent = e.target.value);
+
+async function jget(p){ const r=await fetch(p); return r.json(); }
+async function jpost(p,b){ const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); const j=await r.json(); if(!r.ok) throw new Error(j.error||r.statusText); return j; }
+
+let lastStudyId=null;
+async function loadSystems(){
+  const sys = await jget('/api/systems');
+  document.getElementById('fleetCount').textContent = String(sys.length);
+  const oss = new Set(['stirling-pdf','open-notebook','scrapling']);
+  $('#fleet').innerHTML = sys.map(s=>{
+    const isOss = oss.has(s.id);
+    const cls = isOss ? 'border-amber-800/50 bg-amber-950/30' : (s.baseUrl ? 'border-zinc-700 bg-zinc-900' : 'border-dashed border-zinc-700 bg-zinc-900/50');
+    const badge = isOss ? ' <span class="text-amber-400">OSS</span>' : '';
+    return `<span class="mono text-xs px-2 py-1 rounded border ${cls}">${s.id}${badge}<span class="text-zinc-500"> · ${s.domains.slice(0,2).join('/')}</span></span>`;
+  }).join('');
+}
+async function loadReports(){
+  const d = await jget('/api/reports');
+  const list = d.reports||[];
+  $('#reports').innerHTML = list.length ? list.map(r=>`<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"><div><div class="text-sm font-medium">${r.title||r.studyId}</div><div class="mono text-xs text-zinc-500">${r.finishedAt||''} · ${r.ok}/${r.total} ok${r.synthesizedBy && r.synthesizedBy!=='legacy' ? ` · ${r.synthesizedBy}` : ''}</div></div><div class="flex gap-1"><a href="/api/reports/${r.studyId}?format=md" class="mono text-xs border border-zinc-800 rounded px-2 py-1">spec</a><a href="/api/reports/${r.studyId}" class="mono text-xs border border-zinc-800 rounded px-2 py-1">json</a></div></div>`).join('') : '<div class="mono text-xs text-zinc-500">no reports yet</div>';
+  if(d.lastReport){
+    lastStudyId = d.lastReport.studyId;
+    const sb = d.lastReport.researchSpec?.synthesizedBy;
+    $('#synthBadge').textContent = sb === 'phoenix' ? 'synthesized by glm-5.3-flash' : sb === 'deterministic' ? 'deterministic assembly (no LLM)' : 'the ONE document';
+    let md=''; try{ const r=await fetch(`/api/reports/${lastStudyId}?format=md`); if(r.ok) md=await r.text(); }catch{}
+    $('#latest').textContent = md || JSON.stringify(d.lastReport,null,2).slice(0,4000);
+  }
+}
+async function loadSchedules(){
+  const s = await jget('/api/schedules');
+  $('#schedules').innerHTML = s.length ? s.map(x=>`<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"><div><div class="mono text-xs font-medium">${x.cron} · ${x.domain}</div><div class="text-xs text-zinc-400">${x.title}</div><div class="mono text-xs text-zinc-600">${x.query}</div></div><button onclick="delSchedule('${x.id}')" class="mono text-xs text-red-400 border border-red-900/50 rounded px-2 py-1">delete</button></div>`).join('') : '<div class="mono text-xs text-zinc-500">no crons yet</div>';
+}
+async function pollHealth(){
+  try{ const h=await jget('/api/health'); $('#health').textContent=`${h.registry} systems · last ${h.lastReport? new Date(h.lastReport.at).toLocaleTimeString(): '—'}`; $('#health').className='mono text-xs px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'; }catch{ $('#health').textContent='offline'; $('#health').className='mono text-xs px-2 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-400'; }
+}
+async function launchStudy(){
+  const btn=$('#launchBtn'); btn.disabled=true; btn.textContent='Commanding…';
+  $('#launchOut').classList.remove('hidden'); $('#launchOut').textContent='dispatching directive to fleet → harvesting contributions → synthesizing spec…';
+  try{
+    const directive = {
+      objective: $('#objective').value,
+      hypothesis: $('#hypothesis').value || null,
+      questions: $('#questions').value.split('\n').map(s=>s.trim()).filter(Boolean),
+      direction: $('#direction').value,
+      contextNotes: $('#contextNotes').value || null
+    };
+    const body={ title:$('#title').value, query:$('#query').value, domain:$('#domain').value, priority:$('#priority').value, directive, ingestion: ingestion() };
+    const s=$('#systems').value.trim(); if(s) body.systems=s.split(',').map(x=>x.trim()).filter(Boolean);
+    const r=await jpost('/api/study', body);
+    lastStudyId=r.studyId;
+    const rs=r.researchSpec||{};
+    $('#launchOut').textContent=`spec ready — ${r.systemsDispatched.length} systems dispatched, ${(rs.contributions||[]).length} contributions, ${(rs.systemsOffline||[]).length} offline · synthesized by ${rs.synthesizedBy||'?'} · report ${r.studyId}`;
+    await loadReports();
+  }catch(e){ $('#launchOut').textContent='error: '+e.message; }
+  btn.disabled=false; btn.textContent='⌘ Command the fleet';
+}
+async function launchAll(){
+  $('#domain').value='all'; await launchStudy();
+}
+async function addSchedule(){
+  try{
+    const directive = {
+      objective: $('#objective').value,
+      hypothesis: $('#hypothesis').value || null,
+      questions: $('#questions').value.split('\n').map(s=>s.trim()).filter(Boolean),
+      direction: $('#direction').value,
+      contextNotes: $('#contextNotes').value || null
+    };
+    await jpost('/api/schedule',{ cron:$('#cron').value, title:$('#schedTitle').value||'Scheduled sweep', query:$('#schedQuery').value||$('#query').value, domain:$('#schedDomain').value, directive, ingestion: ingestion() });
+    await loadSchedules();
+  }catch(e){ alert(e.message); }
+}
+async function delSchedule(id){ await fetch(`/api/schedule/${id}`,{method:'DELETE'}); await loadSchedules(); }
+function openLatest(fmt){
+  if(!lastStudyId) return alert('no report yet');
+  window.open(`/api/reports/${lastStudyId}?format=${fmt}`, '_blank');
+}
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString();},1000);
+pollHealth(); loadSystems(); loadReports(); loadSchedules();
+setInterval(pollHealth, 10000);
+setInterval(loadReports, 15000);
+</script>
+</body>
+</html>

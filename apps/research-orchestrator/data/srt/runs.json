@@ -1,0 +1,48 @@
+[
+  {
+    "id": "run_hyp_criteria-version-flips-exceed-10-on-iden_f4b1b6_773a34",
+    "hypothesisId": "hyp_criteria-version-flips-exceed-10-on-iden_f4b1b6",
+    "hypothesisTitle": "Criteria-version flips exceed 10% on identical LUMIERE measurements",
+    "target": {
+      "kind": "kaggle-remote",
+      "experimentId": "rano-perturbation",
+      "hardware": "cpu"
+    },
+    "seeds": {
+      "scheme": "sha256(weekId|day)",
+      "week": "2026-W40",
+      "day": "2026-10-07",
+      "seed": "fb51749715fe64c6f7e3c451ce4216d3e167c8fa253deadaee48782133a70e39"
+    },
+    "analysisPlan": "weighted kappa + patient-cluster bootstrap",
+    "primaryOutcome": "flat-call flip rate",
+    "successCriterion": "flip rate > 0.10",
+    "falsifier": "flip rate <= 0.10",
+    "requiredInputs": [],
+    "notes": "Routed to registered Kaggle job 'rano-perturbation' (cpu) via Recourse.",
+    "createdAt": "2026-10-07T22:01:12.127Z"
+  },
+  {
+    "id": "run_hyp_a-foundation-model-embedding-retains-a-s_3b3c19_7a4ebc",
+    "hypothesisId": "hyp_a-foundation-model-embedding-retains-a-s_3b3c19",
+    "hypothesisTitle": "A foundation-model embedding retains a site/scanner signal after batch correction",
+    "target": {
+      "kind": "kaggle-remote",
+      "experimentId": "fm-embed",
+      "hardware": "gpu"
+    },
+    "seeds": {
+      "scheme": "sha256(weekId|day)",
+      "week": "2026-W40",
+      "day": "2026-10-07",
+      "seed": "fb51749715fe64c6f7e3c451ce4216d3e167c8fa253deadaee48782133a70e39"
+    },
+    "analysisPlan": "canary AUC + batch-correction check",
+    "primaryOutcome": "canary AUC",
+    "successCriterion": "canary AUC > 0.6",
+    "falsifier": "canary AUC <= 0.6",
+    "requiredInputs": [],
+    "notes": "Routed to registered Kaggle job 'fm-embed' (gpu) via Recourse.",
+    "createdAt": "2026-10-07T22:07:08.508Z"
+  }
+]

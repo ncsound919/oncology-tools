@@ -1,0 +1,10 @@
+Overlay365 Oncology
+This product bundles or calls the following third-party material. This NOTICE
+exists so a recipient can satisfy their own obligations; it is not a licence
+grant, and it cannot override a term recorded below.
+
+- Third-party npm/other dependencies: per their own licences, resolved at
+  install time from the package manifest. None are vendored into this tree.
+- Any third-party dataset, ontology or API named in `.env.example` is fetched
+  at runtime from its owner and is not bundled here.
+

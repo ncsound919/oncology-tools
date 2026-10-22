@@ -1,0 +1,31 @@
+data_dir: data
+snapshot_date: "2026-10-09"     # freeze all downloads at this date
+t0: "2020-01-01"                # fixed attention cutoff for the "annotated at all" model
+lag_months: 12                  # attention must predate annotation by this much
+cv_folds: 5
+seed: 1
+attention_measures: [pubtator_gene_cancer, pubtator_gene, openalex_concept, cooc_ratio]
+
+# Builder endpoints (audit 2026-10-10). Public unless noted.
+oncokb_api_base: "https://www.oncokb.org/api/v1"
+oncotree_api_base: "http://oncotree.mskcc.org/api"
+mygene_api_base: "https://mygene.info/v3"
+oncokb_token_env: "ONCOKB_TOKEN"   # token-gated phase only; free self-registration
+control_cancers: "annotated_cancers"  # negative set: genes x cancers with any annotated pair (pre-data rule; needs prereg amendment to change)
+
+# Biology sources (probed 2026-10-10). Live: Ensembl (gene_length), GTEx (expr_breadth).
+ensembl_api_base: "https://rest.ensembl.org"
+gtex_median_tpm_url: "https://storage.googleapis.com/adult-gtex/bulk-gex/v10/rna-seq/GTEx_Analysis_v10_RNASeQCv2.4.2_gene_median_tpm.gct.gz"
+
+# Attention APIs (probed 2026-10-10). Gene-level public counts; pair-level follow build_pairs.
+openalex_api_base: "https://api.openalex.org"
+eutils_base: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+eutils_email: "oncokb-attention@example.org"   # NCBI politeness contact; set a real one
+
+# Added when built into the ecosystem (defaults preserve source behaviour):
+primary_measure: pubtator_gene   # gene-level pre-period count driving expected_attention
+attention_vintage_cap: "2020-01-01"  # = t0: predictor counts must be pre-period (audit 2026-10-10)
+hurdle_prefix: t0_               # hurdle-part measures must carry this prefix and obey t0
+require_hurdle_measures: false   # set true once t0_-prefixed measures exist; guards vacuous pass
+drop_sensitive_features: false   # set true to run the no-pharos_tdl spec-curve variant
+sensitive_features: [pharos_tdl] # knowledge-adjacent: Tclin implies an approved drug exists

@@ -1,0 +1,58 @@
+{
+  "protocol": "oncokb-attention-study-v1",
+  "prereg_version": "prereg_v1",
+  "created": "2026-10-10",
+  "status": "FROZEN_PENDING_DATA",
+  "note": "Frozen before any interim table is built. Builders (workflow/build_*.py) are still TO_IMPLEMENT; nothing below may change once data is opened except by chained amendment snapshot.",
+  "question": "Does surplus literature attention to a gene predict OncoKB annotation of that gene in a cancer type, after adjusting for non-literature biology and enforcing a 12-month attention-to-annotation lag?",
+  "unit_of_analysis": "gene x oncotree_code pair",
+  "frozen_design": {
+    "t0": "2020-01-01",
+    "lag_months": 12,
+    "snapshot_date": "2026-10-09",
+    "cv_folds": 5,
+    "seed": 1,
+    "attention_measures": ["pubtator_gene_cancer", "pubtator_gene", "openalex_concept", "cooc_ratio"],
+    "primary_measure": "pubtator_gene",
+    "hurdle_prefix": "t0_"
+  },
+  "models": {
+    "hurdle_annotated_at_all": {
+      "outcome": "annotated (ever, at snapshot_date)",
+      "attention_vintage": "hurdle_prefix measures only, asof_date <= t0",
+      "predictor_of_interest": "surplus_attention (observed minus cross-fitted expected log-pubs)",
+      "expected": "positive",
+      "verdict_use": "informational; CONTRADICTS requires a written note (evidence_gate direction_verdict, null=0.0)"
+    },
+    "level_sensitivity": {
+      "outcome": "sens_level among annotated pairs",
+      "axes_rule": "sensitivity axis ONLY (1/2/3A/3B/4). Never pooled with res_level.",
+      "expected": "positive (higher surplus -> stronger sensitivity level)"
+    },
+    "level_resistance": {
+      "outcome": "res_level among annotated pairs",
+      "axes_rule": "resistance axis ONLY (R1/R2). Separate model, separate report.",
+      "expected": "two-sided; hypothesis-generating"
+    }
+  },
+  "negative_control": {
+    "outcome": "depmap_dependency (biology.depmap_dependency)",
+    "purpose": "Surplus attention must NOT predict in-vitro dependency. If it does, the surplus carries generic essentiality signal and the annotation result is confounded.",
+    "expected": "null"
+  },
+  "spec_curve": {
+    "axes": ["attention measure (4 levels, hurdle variants for the hurdle model)", "drop_sensitive_features false/true (pharos_tdl in/out)"],
+    "report": "all cells, not the best cell"
+  },
+  "leakage_discipline": [
+    "attention asof_date <= annotation_date minus 12 months (annotated pairs)",
+    "hurdle attention asof_date <= t0",
+    "all attention asof_date <= snapshot_date",
+    "Snakefile validate rule must pass before expected_attention runs (guard file)"
+  ],
+  "open_items": [
+    "ONCOGENICITY terms TO_VERIFY against current OncoKB before any annotated-model run",
+    "build_*.py adapters unimplemented; schemas are the contract",
+    "SHAP summary path results/figures/ pending"
+  ]
+}

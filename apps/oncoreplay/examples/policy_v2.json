@@ -1,0 +1,5 @@
+{"policy_id": "synthetic-policy-v2-strict",
+ "level_tier": {"A": "I", "B": "I", "C": "III", "D": "III", "E": "III"},
+ "offlabel_penalty": 1,
+ "resistance_blocks_levels": ["A", "B", "C"],
+ "recommend_tiers": ["I"]}

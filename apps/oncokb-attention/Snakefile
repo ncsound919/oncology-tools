@@ -1,0 +1,55 @@
+configfile: "config.yaml"
+
+DATA = config["data_dir"]
+SNAP = config["snapshot_date"]
+T0 = config["t0"]
+LAG = config["lag_months"]
+
+rule all:
+    input:
+        f"{DATA}/interim/expected_attention.parquet",
+        f"{DATA}/interim/_leakage_ok.txt",
+
+# Builders below are interfaces: each must write a parquet table validating
+# against workflow/schemas.py (pairs / attention / biology). Implement one
+# adapter per data source; schemas are the contract, not the loaders.
+rule build_gene_universe:
+    output: f"{DATA}/interim/gene_universe.parquet",
+    script: "workflow/build_gene_universe.py"   # public phase: no token needed
+
+rule build_pairs:
+    input: universe=f"{DATA}/interim/gene_universe.parquet",
+    output: f"{DATA}/interim/pairs.parquet",
+    script: "workflow/build_pairs.py"   # gated phase: needs ONCOKB_TOKEN; fails loudly without
+
+rule build_attention:
+    input: universe=f"{DATA}/interim/gene_universe.parquet",
+    output: f"{DATA}/interim/attention.parquet",
+    script: "workflow/build_attention.py"   # gene-level (public); pair-level follows build_pairs
+
+rule build_biology:
+    input: universe=f"{DATA}/interim/gene_universe.parquet",
+    output: f"{DATA}/interim/biology.parquet",
+    script: "workflow/build_biology.py"     # Ensembl + GTEx live; blocked cols -> null
+
+rule validate:
+    input:
+        pairs=f"{DATA}/interim/pairs.parquet",
+        attention=f"{DATA}/interim/attention.parquet",
+        biology=f"{DATA}/interim/biology.parquet",
+    output: f"{DATA}/interim/_leakage_ok.txt",
+    params:
+        lag=LAG,  # months of attention-to-annotation separation
+        t0=T0,
+        snapshot=SNAP,
+        hurdle_prefix=config.get("hurdle_prefix", "t0_"),
+        require_hurdle=config.get("require_hurdle_measures", False),
+    script: "workflow/validate.py"   # standalone-runnable; see its docstring
+
+rule expected_attention:
+    input:
+        attention=f"{DATA}/interim/attention.parquet",
+        biology=f"{DATA}/interim/biology.parquet",
+        guard=f"{DATA}/interim/_leakage_ok.txt",   # never model before the guard passes
+    output: f"{DATA}/interim/expected_attention.parquet",
+    script: "workflow/expected_attention.py"

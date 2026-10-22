@@ -1,0 +1,5 @@
+[
+ {"case_id": "case-001", "gene": "ONC1", "variant": "p.X1Y", "claim": "tier", "value": "II"},
+ {"case_id": "case-001", "gene": "ONC1", "variant": "p.X1Y", "claim": "recommends", "drug": "drugZ"},
+ {"case_id": "case-999", "gene": "ONC1", "variant": "p.X1Y", "claim": "tier", "value": "I"}
+]

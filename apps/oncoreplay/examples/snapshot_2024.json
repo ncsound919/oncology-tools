@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "SYNTHETIC-KB-2024",
+  "source": "synthetic demo data, not real clinical evidence",
+  "as_of": "2024-01-01",
+  "evidence": [
+    {"id": "E1", "gene": "ONC1", "variant": "p.X1Y", "tumor_type": "SYN-LUNG", "drug": "drugA", "direction": "sensitive", "level": "C"},
+    {"id": "E2", "gene": "ONC2", "variant": "p.X2Z", "tumor_type": "SYN-LUNG", "drug": "drugB", "direction": "sensitive", "level": "D"},
+    {"id": "E3", "gene": "ONC3", "variant": "p.R1S", "tumor_type": "any", "drug": "drugC", "direction": "resistant", "level": "B"}
+  ],
+  "benign": [["ONC4", "p.Q1Q"]]
+}

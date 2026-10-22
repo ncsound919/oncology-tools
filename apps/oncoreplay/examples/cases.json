@@ -1,0 +1,5 @@
+[
+ {"case_id": "case-001", "tumor_type": "SYN-LUNG", "variants": [{"gene": "ONC1", "variant": "p.X1Y"}, {"gene": "ONC4", "variant": "p.Q1Q"}]},
+ {"case_id": "case-002", "tumor_type": "SYN-LUNG", "variants": [{"gene": "ONC2", "variant": "p.X2Z"}, {"gene": "ONC5", "variant": "p.X5Y"}]},
+ {"case_id": "case-003", "tumor_type": "SYN-BREAST", "variants": [{"gene": "ONC5", "variant": "p.X5Y"}]}
+]

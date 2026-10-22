@@ -1,0 +1,44 @@
+[
+ {
+  "children": {},
+  "code": "MEL",
+  "color": "Black",
+  "externalReferences": {
+   "NCI": [
+    "C3224"
+   ],
+   "UMLS": [
+    "C0025202"
+   ]
+  },
+  "history": [],
+  "level": 2,
+  "mainType": "Melanoma",
+  "name": "Melanoma",
+  "parent": "SKIN",
+  "precursors": [],
+  "revocations": [],
+  "tissue": "Skin"
+ },
+ {
+  "children": {},
+  "code": "LUAD",
+  "color": "Gainsboro",
+  "externalReferences": {
+   "NCI": [
+    "C3512"
+   ],
+   "UMLS": [
+    "C0152013"
+   ]
+  },
+  "history": [],
+  "level": 3,
+  "mainType": "Non-Small Cell Lung Cancer",
+  "name": "Lung Adenocarcinoma",
+  "parent": "NSCLC",
+  "precursors": [],
+  "revocations": [],
+  "tissue": "Lung"
+ }
+]

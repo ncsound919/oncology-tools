@@ -1,0 +1,81 @@
+# Business-logic store for the oncology research orchestrator.
+# Grounded in the real types in apps/research-orchestrator/src/srt/{registry,experiment}.ts.
+# Point BUSINESS_LOGIC_DIR at this directory to load it.
+meta:
+  project: oncology-orchestrator
+
+entities:
+  Hypothesis:
+    description: A research hypothesis with a preregistered lifecycle and a first-class null ledger.
+    fields:
+      id: { type: string }
+      title: { type: string }
+      mechanism: { type: string }
+      status:
+        type: enum
+        values: [proposed, preregistered, testing, supported, falsified, null, retracted]
+      createdAt: { type: string }
+      updatedAt: { type: string }
+      calibratedConfidence: { type: number }
+      evidenceTier: { type: integer }
+      noveltyScore: { type: number }
+      sourceStudyId: { type: string }
+      sourceClaimIds: { type: array }
+      preregistration: { type: object }
+      outcomes: { type: array }
+    rules:
+      - "A preregistration hash is fixed BEFORE any run; it is never edited after."
+      - "'supported' means the preregistered criterion was met on a run, not that the claim is true."
+      - "The orchestrator never invents a data plan, a run result, or a wet-lab protocol."
+    side_effects:
+      - "preregister: writes the hash to the ledger."
+      - "recordOutcome: updates the world model and the null ledger; appends a provenance spine."
+    known_footguns:
+      - "cannot preregister a hypothesis that is not 'proposed'"
+      - "cannot record an outcome on a 'retracted' hypothesis"
+      - "evidenceTier 0 (agent agreement) is not independent evidence"
+
+  RunCard:
+    description: A run card naming the system that will test a preregistered hypothesis.
+    fields:
+      id: { type: string }
+      hypothesisId: { type: string }
+      hypothesisTitle: { type: string }
+      target: { type: object }
+      seeds: { type: object }
+      analysisPlan: { type: string }
+      primaryOutcome: { type: string }
+      successCriterion: { type: string }
+      falsifier: { type: string }
+      requiredInputs: { type: array }
+      notes: { type: string }
+      createdAt: { type: string }
+    rules:
+      - "target null = unrouted: no fleet system or registered Kaggle job fits, and it must never be faked."
+      - "For fleet targets, requiredInputs MUST be supplied by the study, never invented."
+      - "seed = sha256(weekId|day): the run is reproducible and pre-registered."
+    side_effects: []
+    known_footguns:
+      - "an unrouted card requires a new adapter or a wet-lab protocol before execution"
+
+state_machines:
+  "Hypothesis.status":
+    initial: proposed
+    transitions:
+      - { from: proposed, to: preregistered, condition: "a preregistration with a hash fixed before execution", side_effects: [] }
+      - { from: preregistered, to: testing, condition: "a run card exists and execution has started", side_effects: [] }
+      - { from: testing, to: supported, condition: "the preregistered criterion was met on a completed run", side_effects: [] }
+      - { from: testing, to: falsified, condition: "the preregistered criterion was not met", side_effects: [] }
+      - { from: testing, to: null, condition: "the outcome was inconclusive / null", side_effects: [] }
+      - { from: proposed, to: retracted, condition: "withdrawn before preregistration", side_effects: [] }
+      - { from: preregistered, to: retracted, condition: "withdrawn before testing", side_effects: [] }
+      - { from: testing, to: retracted, condition: "withdrawn during testing", side_effects: [] }
+      - { from: supported, to: retracted, condition: "withdrawn after a result", side_effects: [] }
+      - { from: falsified, to: retracted, condition: "withdrawn after a result", side_effects: [] }
+      - { from: null, to: retracted, condition: "withdrawn after a result", side_effects: [] }
+
+global_footguns:
+  - "'supported' is a reproducibility measurement, never a clinical claim."
+  - "Never invent a data plan, a run result, or a wet-lab protocol."
+  - "Evidence tier 0 (agent agreement) is not independent evidence."
+  - "Background jobs are idempotent by design. Do not add logic that assumes a job runs exactly once."

@@ -1,0 +1,3 @@
+# Regenerable pipeline products: raw API caches + interim tables.
+# Code, tests, fixtures, docs and prereg are committed; data is not.
+data/

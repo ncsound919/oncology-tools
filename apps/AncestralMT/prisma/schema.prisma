@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dataset {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  source      String   // e.g. "TCGA", "Local Biobank", "Community Hospital"
+  cancerType  String?
+  totalSamples Int
+  status      String   @default("pending") // pending, analyzing, completed, error
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ancestryBreakdown AncestryBreakdown[]
+  variantFindings   VariantFinding[]
+  gapReports        GapReport[]
+}
+
+model AncestryBreakdown {
+  id        String   @id @default(cuid())
+  datasetId String
+  population String  // e.g. "European", "African", "East Asian", "Hispanic/Latino", "American Indian/Alaska Native"
+  count     Int
+  percentage Float
+  createdAt DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  @@index([datasetId])
+}
+
+model VariantFinding {
+  id          String   @id @default(cuid())
+  datasetId   String
+  gene        String   // e.g. "BRCA1", "TP53", "EGFR"
+  variant     String   // e.g. "rs1799966", "c.5266dupC"
+  classification String // "Pathogenic", "Likely Pathogenic", "VUS", "Likely Benign", "Benign"
+  populationFrequency Float // frequency in this dataset
+  referenceFrequency  Float // frequency in reference db (gnomAD, etc.)
+  ancestryBiasScore  Float @default(0) // 0 = no bias, 1 = max bias
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  dataset Dataset @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+
+  @@index([datasetId])
+  @@index([gene])
+}
+
+model GapReport {
+  id          String   @id @default(cuid())
+  datasetId   String?
+  title       String
+  cancerType  String?
+  overallDiversityScore Float @default(0) // 0-100
+  underrepresentedPops String   // JSON array of underrepresented populations
+  recommendations     String   // JSON array of recommendations
+  status      String   @default("draft") // draft, finalized
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  dataset Dataset? @relation(fields: [datasetId], references: [id], onDelete: SetNull)
+}
+
+model BiobankSubmission {
+  id          String   @id @default(cuid())
+  institutionName String
+  location    String
+  sampleCount Int
+  cancerTypes String   // JSON array
+  ancestries  String   // JSON array
+  status      String   @default("submitted") // submitted, reviewed, approved, integrated
+  contactEmail String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

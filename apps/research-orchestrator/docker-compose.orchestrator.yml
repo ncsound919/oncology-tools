@@ -1,0 +1,46 @@
+# OSS sidecars for research-orchestrator — all fail-soft, no hard dependency.
+# Start what you need:  docker compose -f docker-compose.orchestrator.yml up -d stirling-pdf open-notebook
+# Or all three:          docker compose -f docker-compose.orchestrator.yml up -d
+# Registry entries in src/registry.ts probe them; if offline the report just marks "offline — start via docker compose".
+services:
+  stirling-pdf:
+    image: frooodle/s-pdf:latest
+    container_name: orchestrator-stirling-pdf
+    ports: ["8080:8080"]
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/v1/info/status || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  open-notebook:
+    image: lfnovo/open-notebook:latest
+    container_name: orchestrator-open-notebook
+    ports: ["5055:5055", "8000:8000"]
+    environment:
+      - SURREALDB_URL=ws://open-notebook-surreal:8000/rpc
+    depends_on: [open-notebook-surreal]
+    restart: unless-stopped
+
+  open-notebook-surreal:
+    image: surrealdb/surrealdb:latest
+    container_name: orchestrator-surreal
+    ports: ["8000:8000"]
+    command: start --user root --pass root memory
+    restart: unless-stopped
+
+  # scrapling sidecar — FastAPI wrapper (see integrations/Scrapling). Build from vendored source.
+  scrapling:
+    build: ../../../04_Integrations/integrations/Scrapling
+    container_name: orchestrator-scrapling
+    ports: ["8001:8001"]
+    command: uvicorn app:app --host 0.0.0.0 --port 8001
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

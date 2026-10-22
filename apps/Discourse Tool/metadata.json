@@ -1,0 +1,6 @@
+{
+  "name": "Multi-Agent Debate Arena",
+  "description": "A scientific accountability and multi-agent discourse engine with persona-spawning orchestrators, structured research briefs, claim cards across 5 evidence tiers, preregistered experimental protocols, quad-lens grounding, and candidate hypothesis ranking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

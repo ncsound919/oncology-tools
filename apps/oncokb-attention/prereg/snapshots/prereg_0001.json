@@ -1,0 +1,76 @@
+{
+  "created_utc": "2026-10-10T02:32:19+00:00",
+  "git_commit": "11edbf822488b4bb92d4b9070b2dadb568a82491",
+  "ledger_sha256": null,
+  "note": "oncokb-attention v1 frozen pre-data",
+  "prereg": {
+    "created": "2026-10-10",
+    "frozen_design": {
+      "attention_measures": [
+        "pubtator_gene_cancer",
+        "pubtator_gene",
+        "openalex_concept",
+        "cooc_ratio"
+      ],
+      "cv_folds": 5,
+      "hurdle_prefix": "t0_",
+      "lag_months": 12,
+      "primary_measure": "pubtator_gene",
+      "seed": 1,
+      "snapshot_date": "2026-10-09",
+      "t0": "2020-01-01"
+    },
+    "leakage_discipline": [
+      "attention asof_date <= annotation_date minus 12 months (annotated pairs)",
+      "hurdle attention asof_date <= t0",
+      "all attention asof_date <= snapshot_date",
+      "Snakefile validate rule must pass before expected_attention runs (guard file)"
+    ],
+    "models": {
+      "hurdle_annotated_at_all": {
+        "attention_vintage": "hurdle_prefix measures only, asof_date <= t0",
+        "expected": "positive",
+        "outcome": "annotated (ever, at snapshot_date)",
+        "predictor_of_interest": "surplus_attention (observed minus cross-fitted expected log-pubs)",
+        "verdict_use": "informational; CONTRADICTS requires a written note (evidence_gate direction_verdict, null=0.0)"
+      },
+      "level_resistance": {
+        "axes_rule": "resistance axis ONLY (R1/R2). Separate model, separate report.",
+        "expected": "two-sided; hypothesis-generating",
+        "outcome": "res_level among annotated pairs"
+      },
+      "level_sensitivity": {
+        "axes_rule": "sensitivity axis ONLY (1/2/3A/3B/4). Never pooled with res_level.",
+        "expected": "positive (higher surplus -> stronger sensitivity level)",
+        "outcome": "sens_level among annotated pairs"
+      }
+    },
+    "negative_control": {
+      "expected": "null",
+      "outcome": "depmap_dependency (biology.depmap_dependency)",
+      "purpose": "Surplus attention must NOT predict in-vitro dependency. If it does, the surplus carries generic essentiality signal and the annotation result is confounded."
+    },
+    "note": "Frozen before any interim table is built. Builders (workflow/build_*.py) are still TO_IMPLEMENT; nothing below may change once data is opened except by chained amendment snapshot.",
+    "open_items": [
+      "ONCOGENICITY terms TO_VERIFY against current OncoKB before any annotated-model run",
+      "build_*.py adapters unimplemented; schemas are the contract",
+      "SHAP summary path results/figures/ pending"
+    ],
+    "prereg_version": "prereg_v1",
+    "protocol": "oncokb-attention-study-v1",
+    "question": "Does surplus literature attention to a gene predict OncoKB annotation of that gene in a cancer type, after adjusting for non-literature biology and enforcing a 12-month attention-to-annotation lag?",
+    "spec_curve": {
+      "axes": [
+        "attention measure (4 levels, hurdle variants for the hurdle model)",
+        "drop_sensitive_features false/true (pharos_tdl in/out)"
+      ],
+      "report": "all cells, not the best cell"
+    },
+    "status": "FROZEN_PENDING_DATA",
+    "unit_of_analysis": "gene x oncotree_code pair"
+  },
+  "prereg_sha256": "e3556239f9a8af8eed3230755bbe8aa88d81a5574093c61e7b6bdfed48cbb4d3",
+  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "record_hash": "60390b865ff92405ac143e300d3b34a321bb6b83a0da2560133e9e96da4beea5",
+  "seq": 1
+}

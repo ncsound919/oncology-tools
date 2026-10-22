@@ -1,0 +1,31 @@
+{
+  "name": "research-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "daemon": "tsx scripts/daemon.ts",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "verify:anchor": "node verify-anchor.mjs"
+  },
+  "dependencies": {
+    "@hatchet-dev/typescript-sdk": "^1.36.0",
+    "better-sqlite3": "^13.0.3",
+    "cron": "^3.2.0",
+    "express": "^4.21.2",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/cron": "^2.4.0",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.7.4",
+    "vitest": "^4.1.11"
+  }
+}

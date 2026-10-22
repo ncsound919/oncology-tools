@@ -1,0 +1,81 @@
+// Prisma schema — OncoSIM unified cancer systems biology platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A therapeutic asset in the precision-medicine pipeline (RP04340, PT0511, etc.)
+model Asset {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g. RP04340
+  name        String
+  sponsor     String
+  modality    String   // degrader / inhibitor / antagonist / vaccine / antibody-drug-conjugate
+  target      String   // KRAS / EP4 / etc.
+  leg         Int      // 1..4 — primary cure-framework leg
+  tier        Int      // 0..5 — current best evidence tier
+  status      String   // preclinical / phase-1 / phase-2 / phase-3
+  summary     String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  simulations Simulation[]
+  chatLogs    ChatLog[]
+}
+
+// One of the five pre-defined experiment protocols
+model Experiment {
+  id           String   @id @default(cuid())
+  number       Int      @unique // 1..5
+  title        String
+  objective    String
+  hypothesis   String
+  method       String
+  endpoints    String
+  controls     String
+  interpretation String
+  legs         String   // e.g. "1,4"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chatLogs     ChatLog[]
+}
+
+// A saved simulation run from the precision-targeting simulator
+model Simulation {
+  id          String   @id @default(cuid())
+  kind        String   // "kinetics" | "delivery"
+  params      String   // JSON-encoded parameter set
+  results     String   // JSON-encoded result set
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// Chat history for the AI research assistant
+model ChatLog {
+  id          String   @id @default(cuid())
+  role        String   // user | assistant
+  content     String
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+  experimentId String?
+  experiment  Experiment? @relation(fields: [experimentId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// A curated genomic variant observation (mock sequencing-style data)
+model Variant {
+  id          String   @id @default(cuid())
+  gene        String   // KRAS, TP53, EGFR...
+  hgvs        String   // c.35G>A
+  protein     String   // p.G12D
+  alleleFreq  Float    // 0..1
+  cohort      String   // PDAC / NSCLC / CRC
+  hlaBinding  Float?   // predicted nM
+  createdAt   DateTime @default(now())
+}

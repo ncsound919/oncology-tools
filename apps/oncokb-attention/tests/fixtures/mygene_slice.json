@@ -1,0 +1,26 @@
+[
+ {
+  "HGNC": "76",
+  "_id": "25",
+  "_version": 1,
+  "entrezgene": "25",
+  "query": "25",
+  "symbol": "ABL1"
+ },
+ {
+  "HGNC": "1097",
+  "_id": "673",
+  "_version": 1,
+  "entrezgene": "673",
+  "query": "673",
+  "symbol": "BRAF"
+ },
+ {
+  "HGNC": "11998",
+  "_id": "7157",
+  "_version": 1,
+  "entrezgene": "7157",
+  "query": "7157",
+  "symbol": "TP53"
+ }
+]

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "hypotheses": [
+    {
+      "id": "hyp_criteria-version-flips-exceed-10-on-lumi_afafb0",
+      "title": "Criteria-version flips exceed 10% on LUMIERE",
+      "mechanism": "RANO version changes PD thresholds",
+      "status": "proposed",
+      "createdAt": "2026-10-07T21:58:14.868Z",
+      "updatedAt": "2026-10-07T21:58:14.868Z",
+      "calibratedConfidence": 0.5,
+      "evidenceTier": 3,
+      "outcomes": []
+    },
+    {
+      "id": "hyp_criteria-version-flips-exceed-10-on-iden_f4b1b6",
+      "title": "Criteria-version flips exceed 10% on identical LUMIERE measurements",
+      "mechanism": "RANO version changes PD thresholds and lesion measurement error",
+      "status": "preregistered",
+      "createdAt": "2026-10-07T22:01:11.813Z",
+      "updatedAt": "2026-10-07T22:01:12.080Z",
+      "calibratedConfidence": 0.5,
+      "evidenceTier": 3,
+      "outcomes": [],
+      "preregistration": {
+        "title": "Criteria-version flips exceed 10% on identical LUMIERE measurements",
+        "mechanism": "RANO version changes PD thresholds and lesion measurement error",
+        "dataPlan": "LUMIERE 91 patients",
+        "analysisPlan": "weighted kappa + patient-cluster bootstrap",
+        "holdout": "patient-grouped folds",
+        "primaryOutcome": "flat-call flip rate",
+        "successCriterion": "flip rate > 0.10",
+        "falsifier": "flip rate <= 0.10",
+        "hash": "9554841c125da87706c501535906b66db903dbd8855b7b631f415adb8248e960",
+        "enteredAt": "2026-10-07T22:01:12.080Z"
+      }
+    },
+    {
+      "id": "hyp_a-foundation-model-embedding-retains-a-s_3b3c19",
+      "title": "A foundation-model embedding retains a site/scanner signal after batch correction",
+      "mechanism": "depthwise ViT slide embeddings encode acquisition site",
+      "status": "preregistered",
+      "createdAt": "2026-10-07T22:06:39.076Z",
+      "updatedAt": "2026-10-07T22:06:39.192Z",
+      "calibratedConfidence": 0.5,
+      "evidenceTier": 3,
+      "outcomes": [],
+      "preregistration": {
+        "title": "A foundation-model embedding retains a site/scanner signal after batch correction",
+        "mechanism": "depthwise ViT slide embeddings encode acquisition site",
+        "dataPlan": "PMC/TCGA slide tiles",
+        "analysisPlan": "canary AUC + batch-correction check",
+        "holdout": "held-out sites",
+        "primaryOutcome": "canary AUC",
+        "successCriterion": "canary AUC > 0.6",
+        "falsifier": "canary AUC <= 0.6",
+        "hash": "27e594895eab2a247fdef551763602c612498d5af21f3ce008889d3156cfaecf",
+        "enteredAt": "2026-10-07T22:06:39.192Z"
+      }
+    }
+  ]
+}
