@@ -22,7 +22,7 @@ eight oncology research tools, each in its own folder under `apps/`.
 - Whole repository: **Code → Download ZIP**, or
   `https://github.com/ncsound919/oncology-tools/archive/refs/heads/main.zip`
 - One tool: open its folder and download the repository, or use the per-tool ZIP
-  attached to the [latest release](../../releases/latest).
+  attached to the [latest release](https://github.com/ncsound919/oncology-tools/releases/latest).
 
 ## Running a tool
 
